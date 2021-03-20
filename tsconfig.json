@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "module": "ES2020",
+        "outDir": "dist",
+        "allowJs": true,
+        "moduleResolution": "node",
+        "noImplicitAny": false,
+        "removeComments": true,
+        "preserveConstEnums": false,
+        "sourceMap": true,
+        "target": "ES2019",
+        "experimentalDecorators": true,
+        "baseUrl": "./",
+        "jsx":"react",
+        "esModuleInterop": true,
+        "strict": true,
+        "alwaysStrict":true,
+        "typeRoots": [
+            "node_modules/@types",
+            "src",
+            "ts"
+          ],
+        "lib":[
+            "DOM",
+            "ES2019"
+        ]
+    },
+    "include": [
+        "src/**/*", "ts/**/*"
+    ]
+}

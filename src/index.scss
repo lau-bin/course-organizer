@@ -1,0 +1,60 @@
+.container{
+    display: flex;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    width: min-content;
+}
+.day{
+    width: 100%;
+    height: calc((16px * 21) + (3 * 1.5rem));
+}
+.recreo{
+    background-color: grey;
+}
+.li{
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    height: 100%;
+    width: 100%;
+    
+}
+.ul{
+    display: grid;
+    column-gap: 0;
+    row-gap: 0;
+    justify-items: start;
+    align-items: start;
+    justify-content: stretch;
+    align-content: stretch;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+.hourName{
+    height: 1.5rem;
+}
+.course{
+    border-left: 1px solid black;
+    cursor: pointer;
+    overflow: hidden;
+    width: 36px;
+    height: 100%;
+    opacity: 0.8;
+    white-space: nowrap;
+    text-overflow: "";
+}
+.management{
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+}
+.textScanner {
+    padding: 10px;
+    resize: none;
+}
+
+.cardElement{
+    width: 100%;
+    margin-left: 5px;
+}
+.buttonElem{
+    width: 100% !important;
+}
