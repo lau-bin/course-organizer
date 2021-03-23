@@ -1,16 +1,17 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const exec = require('child_process').exec;
 
 const common = {
-  mode: 'development',
-  devtool:'source-map',
+  mode: process.env.BUILD_MODE === 'production' ? 'production' : 'development',
+  devtool: process.env.BUILD_MODE === 'production' ? undefined : 'source-map',
   module:{
     rules:[
         {
             test: /.*(png|jpe?g|gif)$/i,
             loader: 'file-loader',
             options:{
-                name: '[path][hash].[ext]'
+                name: '[hash].[ext]'
             },
             exclude: /node_modules/
         },
@@ -40,7 +41,7 @@ const common = {
                 loader: 'css-loader',
                 options: {
                   modules: {
-                    localIdentName: '[path][name]__[local]--[hash:base64:5]'
+                    localIdentName: '[hash:base64:5]'
                   }
                 }
               },
@@ -59,9 +60,19 @@ resolve: {
   plugins: [
     new MiniCssExtractPlugin({
       filename:"popup/main.css"
-    })
+    }),
+    // {
+    //   apply: (compiler) => {
+    //     compiler.hooks.afterEmit.tap('AfterEmitPlugin', (compilation) => {
+    //       exec('postBuild.sh', (err, stdout, stderr) => {
+    //         if (stdout) process.stdout.write(stdout);
+    //         if (stderr) process.stderr.write(stderr);
+    //       });
+    //     });
+    //   }
+    // }
   ],
-watch: true,
+watch: process.env.BUILD_MODE === 'production' ? false : true,
 watchOptions: {
     ignored: ['/node_modules', '*.d.ts']
   }

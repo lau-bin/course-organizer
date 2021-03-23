@@ -1,3 +1,9 @@
+/**
+ * ✅ TODOS:
+ * • Unit Test
+ * • Performance profiling
+ */
+
 import { util } from './framework';
 import * as ReactDOM from "react-dom";
 import React from "react";
@@ -89,15 +95,17 @@ interface CourseSelection extends Course{
     color?: Array<string>,
     inConflict: number,
     mark?:number,
-    ref:Array<React.RefObject<any>>
+    refreshHook:Array<Function>
 }
 var displayedCourses: Array<Array<JSX.Element>> = [];
-let refArray:Array<React.RefObject<HTMLElement>> = [];
+var refArray:Array<React.RefObject<HTMLElement>> = [];
+var lastSubjectName = "";
 
 function Schedule(){
     let inputTextCoursesRef = React.createRef<HTMLTextAreaElement>();
     let inputNameCoursesRef = React.createRef<HTMLInputElement>();
     const [unusedState, setState] = React.useState<Array<Array<JSX.Element>>>([]);
+    const [subjectName, setImpNameState] = React.useState<string>(lastSubjectName);
    
     let freeTime = (style:any) => {
         return(<>
@@ -147,7 +155,7 @@ function Schedule(){
     function orderCoursesByName(courses:Array<Course>){
         courses.forEach(course =>{
             let courseArr = courseNameMap.get(course.name);
-            let selCourse = {...course,selected:false, ref:[], inConflict: 0};
+            let selCourse = {...course,selected:false, ref:[], inConflict: 0, refreshHook:[]};
             if (!courseArr){
                 courseNameMap.set(course.name, [selCourse]);
             }
@@ -157,16 +165,6 @@ function Schedule(){
         })        
     }
     
-    
-    function getRef(id:number): React.RefObject<HTMLElement>{
-        return refArray[id];
-    }
-    function saveRef(ref:React.RefObject<HTMLElement>): number{
-        return (refArray.push(ref) -1);
-    }
-    
-     
-     
      function resetSchedule(){
         colorIndex = 0;
         courses.length = 0;
@@ -289,15 +287,14 @@ function Schedule(){
                              }
                              background = `repeating-linear-gradient(
                                  -45deg,
-                                 ${/*@ts-ignore*/undefined}
+                              
                                  rgba(${stripeColor[0]}, ${stripeColor[1]}, ${stripeColor[2]}, 0.75),
-                                 ${/*@ts-ignore*/undefined}
                                  rgba(${stripeColor[0]}, ${stripeColor[1]}, ${stripeColor[2]}, 0.75) 4px,
-                                 rgba(0, 0, 0, 0) 0px,
-                                 rgba(0, 0, 0, 0) 20px
-                               ),rgb(${color[0]},${color[1]},${color[2]})`;
+                                 rgba(0, 0, 0, 0.75) 0px,
+                                 rgba(0, 0, 0, 0.75) 20px
+                               ),rgba(${color[0]},${color[1]},${color[2]}, 0.75)`;
                          }else{
-                             background = `rgb(${color[0]},${color[1]},${color[2]})`;
+                             background = `rgba(${color[0]},${color[1]},${color[2]}, 0.75)`;
                          }
     
                          const style = {
@@ -305,13 +302,18 @@ function Schedule(){
                              gridColumn:col,
                              background: background
                          }
+                         console.log(background)
 
-                     domElements.push(<CourseElement color={color} course={aSubjectCourses[i]} styles={style} selected={false} >{aSubjectCourses[i].name}</CourseElement>);
+                     domElements.push(<CourseElement callback={toggleSelectionCallback} color={color} course={aSubjectCourses[i]} styles={style} selected={false} >
+                         <p className={css.courseData}>{aSubjectCourses[i].name.toUpperCase()}</p>
+                         <p className={css.courseData}>{aSubjectCourses[i].place}</p>
+                         <p className={css.courseData}>{aSubjectCourses[i].code}</p>
+                         </CourseElement>);
                          }
                  })
              }
          }
-     
+         React.createElement
          return domElements;
      }
   
@@ -321,14 +323,18 @@ function Schedule(){
              return color;
          }else{
             if (colorIndex == colors.length){
-                throw "Too many courses"; 
+                let err = "Error 🤓Too many courses";
+                
+                throw err; 
              }
              color = colors[colorIndex++];
              if (color){
                  colorMap.set(name, color)
                  return color;
              }else{
-                 throw "Too many courses";
+                let err = "Error 🤓Too many courses";
+                
+                throw err; 
              }
          }
      }
@@ -360,7 +366,9 @@ function Schedule(){
              }
              return choosedColor;
          }else{
-             throw "Too many courses";
+            let err = "Error 🤓Too many courses";
+            
+            throw err; 
          }
      
      }
@@ -377,7 +385,9 @@ function Schedule(){
                 element.value = "";
             }
         }catch(e){
-            throw "Error parsing courses: " + e;
+            let err = "☠️ Error parsing courses: " + e;
+            
+            throw err; 
         }
 
         setComponentState(scannedCourses);
@@ -461,6 +471,74 @@ function Schedule(){
     }
 
 
+    function setConflictingCourses(course:CourseSelection){
+        let mark = Date.now();
+        for (let i1 = 0; i1 < course.date.length; i1++){
+            let date = course.date[i1];
+            for (let i2 = date.start; i2 <= date.end; i2++){
+                orderedCourses[date.day][i2].forEach(conflCourse =>{
+                    set(conflCourse);
+                })
+            }
+        }
+
+        let subjectMap = courseNameMap.get(course.name);
+        subjectMap.forEach(aCourse => {
+            if (aCourse != course){
+                set(aCourse);
+            }
+        });
+        function set(conflCourse){
+            //Since i span the same courses over all hours they accopy, they are repeated, this condition make sure we dont affect them multiple times
+            if (conflCourse != course && (!conflCourse.mark || conflCourse.mark < mark)){
+                conflCourse.mark = mark+1;
+                if (!conflCourse.inConflict){
+                    conflCourse.refreshHook.forEach(hook => hook(CallbackType.InConflict));
+                }
+                conflCourse.inConflict++; 
+            }
+        }
+    }
+
+    
+
+
+    function unSetConflictingCourses(course:CourseSelection){
+        let mark = Date.now();
+        for (let i1 = 0; i1 < course.date.length; i1++){
+            let date = course.date[i1];
+            for (let i2 = date.start; i2 <= date.end; i2++){
+                orderedCourses[date.day][i2].forEach(conflCourse =>{
+                    unset(conflCourse);
+                })
+            }
+        }
+        let subjectMap = courseNameMap.get(course.name);
+        subjectMap.forEach(aCourse => {
+            if (aCourse != course){
+                unset(aCourse);
+            }
+        });
+
+        function unset(conflCourse){
+            //Since i span the same courses over all hours they accopy, they are repeated, this condition make sure we dont affect them multiple times
+            if (conflCourse != course && (!conflCourse.mark || conflCourse.mark < mark)){
+                conflCourse.mark = mark+1;
+                conflCourse.inConflict--; 
+                if (!conflCourse.inConflict){
+                    conflCourse.refreshHook.forEach(hook => hook(CallbackType.NotInConflict));
+                }
+            }
+        }
+    }
+
+    function toggleSelectionCallback(course:CourseSelection){
+        if (course.selected){
+            setConflictingCourses(course);
+        }else{
+            unSetConflictingCourses(course);
+        }
+    }
 
     
     return(
@@ -469,13 +547,16 @@ function Schedule(){
             {week()}
         </div>
         <div className={css.management}>
-            <div>
-                <button onClick={getShedule} type="button" className={`${css.buttonElem} btn btn-primary`}>Get My Schedule</button>
-                <button onClick={resetSchedule} type="button" className={`${css.buttonElem} btn btn-primary`}>Reset</button>
+            
+        <div>{/* Unable to verticall align the buttons 🤔 */}
+            <div className="flex-column">
+                <button onClick={getShedule} type="button" className={`align-self-start ${css.buttonElem} btn btn-primary`}>Get My Schedule</button>
+                <button onClick={resetSchedule} type="button" className={`align-self-end ${css.buttonElem} btn btn-primary`}>Reset</button>
             </div>
+        </div>
             <div className={`${css.cardElement} card`}>
                 <div className="card-header">Scan courses</div>
-                <input placeholder="Name" ref={inputNameCoursesRef} className="rounded"></input>
+    <input placeholder="Name" ref={inputNameCoursesRef} className="rounded" value={subjectName} onChange={e=>{setImpNameState(e.target.value);lastSubjectName = e.target.value}}></input>
                 <textarea ref={inputTextCoursesRef} cols={40} className={`${css.textScanner} rounded`}></textarea>
                 <button onClick={handleClickScan} type="submit" className="btn btn-primary">Scan</button>
             </div>
@@ -483,139 +564,124 @@ function Schedule(){
     </div>
     );
 }
+const enum CallbackType{
+    Select,
+    Unselect,
+    InConflict,
+    NotInConflict
+}
 
-class CourseElement extends React.Component<any>{
 
+class CourseElement extends React.Component<any, {style:any}>{
+    
     selected:boolean;
     color:Array<string>;
     styles:any;
     children:any;
     course:CourseSelection;
-    
-    ref:React.RefObject<any>
+    medium:Function;
+    toggleSelectionCallback:Function;
+
 
     constructor(props){
         super(props);
         this.selected = props.selected;//Need it?
         this.color = props.color;
-        this.styles = props.styles;
         this.children = props.children;
         this.course = props.course;
+        this.medium = props.medium;
+        this.toggleSelectionCallback = props.callback;
 
-        this.ref = React.createRef<HTMLSpanElement>();
-        this.course.ref.push(this.ref);
-    }   
+        this.state = {style:{...props.styles}};
+
+        this.course.refreshHook.push(this.refreshHook.bind(this));
+    }  
+    
+    refreshHook(action:CallbackType){
+        if (action == CallbackType.InConflict){       
+            this.applyConflictedEffect();
+        }else if (action == CallbackType.NotInConflict){
+            this.clearConflictedEffect();
+        }else if (action == CallbackType.Select){
+            this.applySelectedEffect();
+        } else if (action == CallbackType.Unselect){
+            this.clearSelectedEffects();
+        }
+    }
 
     render(){
         return(
-            <span ref={this.ref} style={this.styles} className={`${css.course}`} key={index.val++} onClick={e => this.handleClick(this.course)}>{this.children}</span>
+            <span style={this.state.style} className={`${css.course}`} key={index.val++} onClick={e => this.handleClick()}>
+                {this.children}
+                </span>
             );
     }
 
     componentDidMount(){
 
         if (this.course.selected){
-            this.applySelectedEffect(this.course);
+            this.applySelectedEffect();
         }
         if (this.course.inConflict){
-            this.applyConflictedEffect(this.course);
+            this.applyConflictedEffect();
         }
     }
-    handleClick(course:CourseSelection){
-        if (course.inConflict){
+    handleClick(){
+        if (this.course.inConflict){
             return;
         }
-        if (course.selected){
-            this.clearSelectedEffects(course);
-            course.selected = false;
+        if (this.course.selected){
+            this.course.refreshHook.forEach(hook => hook(CallbackType.Unselect));
+            this.course.selected = false;
             //Make conflicting courses ok again
-            this.unSetConflictingCourses(course);
-            return;
+            this.toggleSelectionCallback(this.course);
+        }else{
+            this.course.refreshHook.forEach(hook => hook(CallbackType.Select));
+            //Select course
+            this.course.selected = true;
+        
+            //Make conflicting courses greyed out
+            this.toggleSelectionCallback(this.course);
         }
-        this.applySelectedEffect(course);
-        //Select course
-        course.selected = true;
-    
-        //Make conflicting courses greyed out
-        this.setConflictingCourses(course);
-    }
-    setConflictingCourses(course:CourseSelection){
-        let mark = Date.now();
-        for (let i1 = 0; i1 < course.date.length; i1++){
-            let date = course.date[i1];
-            for (let i2 = date.start; i2 <= date.end; i2++){
-                orderedCourses[date.day][i2].forEach(conflCourse =>{
-                    //Since i span the same courses over all hours they accopy, they are repeated, this condition make sure we dont affect them multiple times
-                    if (conflCourse != course && (!conflCourse.mark || conflCourse.mark < mark)){
-                        conflCourse.mark = mark+1;
-                        if (!conflCourse.inConflict){
-                            conflCourse.ref.forEach(domRef=>{
-                                let dom = domRef.current;
-                                if (dom){
-                                    dom.style.backgroundColor = "gray";
-                                }
-                            })
-                        }
-                        conflCourse.inConflict++; 
-                    }
-                })
-            }
-        }
-    }
 
-    applySelectedEffect(course:CourseSelection){
-        course.ref.forEach(domRef=>{
-            let dom = domRef.current;
-            if (dom){
-                dom.style.boxShadow = "0px 0px 5px 3px #0ff";
-                dom.style.position = "relative";
-                dom.style.zIndex = "1";
+    }
+   
+    applySelectedEffect(){
+        this.setState({
+            style:{
+                ...this.state.style,
+                boxShadow: "0px 0px 5px 3px #0ff",
+                position: "relative",
+                zIndex: "1"
             }
-        })
-
+        });
     }
     
-    unSetConflictingCourses(course:CourseSelection){
-        let mark = Date.now();
-        for (let i1 = 0; i1 < course.date.length; i1++){
-            let date = course.date[i1];
-            for (let i2 = date.start; i2 <= date.end; i2++){
-                orderedCourses[date.day][i2].forEach(conflCourse =>{
-                    //Since i span the same courses over all hours they accopy, they are repeated, this condition make sure we dont affect them multiple times
-                    if (conflCourse != course && (!conflCourse.mark || conflCourse.mark < mark)){
-                        conflCourse.mark = mark+1;
-                        conflCourse.inConflict--; 
-                        if (!conflCourse.inConflict){
-                            let color = this.color;
-                            conflCourse.ref.forEach(domRef=>{
-                            let dom = domRef.current;
-                            if (dom){
-                                dom.style.backgroundColor = `rgb(${color[0]},${color[1]},${color[2]})`;
-                            }
-                        })
-                        }
-                    }
-                })
+    applyConflictedEffect(){
+        this.setState({
+            style:{
+                ...this.state.style,
+                backgroundColor: "gray"
             }
-        }
+        });
     }
-    applyConflictedEffect(course:CourseSelection){
-        course.ref.forEach(domRef=>{
-            let dom = domRef.current;
-            if (dom){
-                dom.style.backgroundColor = "gray";
-            }
-        })
-    }
-    clearSelectedEffects(course:CourseSelection){
-        course.ref.forEach(domRef=>{
-            let dom = domRef.current;
-            if (dom){
-                dom.style.boxShadow = "none";
-                dom.style.position = "";
-                dom.style.zIndex = "";
-            }
-        })
 
+    clearSelectedEffects(){
+        this.setState({
+            style:{
+                ...this.state.style,
+                boxShadow: "none",
+                position: "",
+                zIndex: ""
+            }
+        });
+    }
+    clearConflictedEffect(){
+        this.setState({
+            style:{
+                ...this.state.style,
+                backgroundColor: `rgb(${this.color[0]},${this.color[1]},${this.color[2]})`
+            }
+        });
     }
 }

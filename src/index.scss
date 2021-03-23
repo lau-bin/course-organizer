@@ -2,11 +2,11 @@
     display: flex;
     border-bottom: 1px solid black;
     border-right: 1px solid black;
-    width: min-content;
+    width: 100%;
 }
 .day{
     width: 100%;
-    height: calc((16px * 21) + (3 * 1.5rem));
+    min-height: calc((16px * 21) + (3 * 1.5rem));
 }
 .recreo{
     background-color: grey;
@@ -26,20 +26,18 @@
     align-items: start;
     justify-content: stretch;
     align-content: stretch;
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1.5rem 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.5rem 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.5rem 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
-.hourName{
-    height: 1.5rem;
-}
+
 .course{
     border-left: 1px solid black;
     cursor: pointer;
-    overflow: hidden;
     width: 36px;
     height: 100%;
-    opacity: 0.8;
-    white-space: nowrap;
     text-overflow: "";
+    max-height: calc(8em + 0.1em * 4);
+    overflow: hidden;
+    z-index: 1;
 }
 .management{
     display: flex;
@@ -57,4 +55,17 @@
 }
 .buttonElem{
     width: 100% !important;
+}
+.courseData{
+    margin: 0;
+    padding: 0;
+    word-break: break-all;
+    line-height: 1.1em;
+    color: rgb(255, 255, 255);
+}
+.courseData:nth-child(2){
+    color: rgb(68, 68, 68);
+}
+.courseData:nth-child(3){
+    color: rgb(0, 0, 0);
 }

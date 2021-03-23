@@ -1,0 +1,41 @@
+{
+
+    "manifest_version": 2,
+    "name": "Course Organizer",
+    "version": "1.0.0",
+   
+    "description": "Helps organizing a schedule.",
+  
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "lautarocutri@gmail.com"
+      }
+    },
+
+    "background": {
+        "scripts": ["background.js"],
+        "persistent":true
+      },
+
+    "permissions": [
+        "activeTab",
+        "menus",
+        "storage"
+      ],
+
+  "browser_action": {
+    "default_icon": {
+      "64": "icon/icon.png"
+    },
+    "default_popup":"popup/schedule.html"
+  },
+  
+  "web_accessible_resources": [
+    "icons/icon.png",
+    "popup/schedule.js",
+    "popup/main.js",
+    "popup/main.css",
+    "popup/bootstrap.css"
+  ]
+  
+  }

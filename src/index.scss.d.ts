@@ -4,8 +4,8 @@ declare namespace IndexScssNamespace {
     cardElement: string;
     container: string;
     course: string;
+    courseData: string;
     day: string;
-    hourName: string;
     li: string;
     management: string;
     recreo: string;
