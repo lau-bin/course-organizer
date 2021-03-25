@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./server/server.js ",
-    "build:development": "node ./node_modules/.bin/webpack",
-    "build:production": "export NODE_ENV=production; export BUILD_MODE=production; node ./node_modules/.bin/webpack",
+    "build:development": "export NODE_ENV=development; export BUILD_MODE=development; node ./node_modules/.bin/webpack",
+    "build:production": "export CLEAR_DIST=true; export NODE_ENV=production; export BUILD_MODE=production; node preBuild.js; nnode ./node_modules/.bin/webpack",
     "build": "npm run build:development"
   },
   "author": "Lautaro C",
@@ -30,7 +30,7 @@
     "html-loader": "^0.5.5",
     "loader-utils": "^1.2.3",
     "mini-css-extract-plugin": "^0.9.0",
-    "node-sass": "^4.13.1",
+    "sass": "^1.32.8",
     "nodemon": "2.0.2",
     "sass-loader": "^8.0.2",
     "style-loader": "^1.1.3",

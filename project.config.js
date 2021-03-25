@@ -1,5 +1,6 @@
 module.exports = {
     APP_ROOT: __dirname, //Current dir full path in node
+    BUILD_DIR: "dist",
     KEEP_FILES: [
         "dist/popup/schedule.html",
         "dist/manifest.json",
@@ -7,7 +8,7 @@ module.exports = {
     ],
     MOVE_FILES: [
         ["resources/bootstrap/bootstrap.css","popup"],
-        ["src/schedule.html", ""],
+        ["src/schedule.html", "popup"],
         ["src/manifest.json", ""]
     ],
     MOVE_FILES_DEV:[
